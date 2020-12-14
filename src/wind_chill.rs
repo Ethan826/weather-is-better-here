@@ -14,6 +14,8 @@ pub fn compute_wind_chill(fahrenheit: f64, knots: usize) -> Option<f64> {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
     #[test]
     fn test_compute_wind_chill() {
         assert_eq!(compute_wind_chill(20.0, 5).unwrap().round(), 12.0);
