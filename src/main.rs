@@ -4,6 +4,9 @@ use serde_xml_rs::from_str;
 use std::collections::HashMap;
 use std::error::Error;
 
+use weather::celsius_to_fahrenheit;
+use weather::wind_chill::compute_wind_chill;
+
 #[derive(Debug)]
 struct TempData {
     temp_c: f64,
@@ -48,26 +51,6 @@ pub struct Data {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Response {
     pub data: Data,
-}
-
-fn celsius_to_fahrenheit(celsius: f64) -> f64 {
-    celsius * 9.0 / 5.0 + 32.0
-}
-
-fn convert_knots_to_mph(knots: usize) -> f64 {
-    ((1.15078 * knots as f64) * 100.00).round() / 100.0
-}
-
-fn compute_wind_chill(fahrenheit: f64, knots: usize) -> Option<f64> {
-    let mph = convert_knots_to_mph(knots);
-    if mph >= 3.0 && fahrenheit < 50.0 {
-        Some(
-            35.74 + (0.6215 * fahrenheit) - (35.75 * mph.powf(0.16))
-                + (0.4275 * fahrenheit * mph.powf(0.16)),
-        )
-    } else {
-        None
-    }
 }
 
 fn compute_relative_humidity(celsius: f64, dewpoint: f64) -> Result<f64, ()> {
@@ -181,28 +164,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn test_celsius_to_fahrenheit() {
-        assert_eq!(celsius_to_fahrenheit(0.0), 32.0);
-        assert_eq!(celsius_to_fahrenheit(-40.0), -40.0);
-        assert_eq!(celsius_to_fahrenheit(100.0), 212.0);
-    }
-
-    #[test]
-    fn test_convert_knots_to_mph() {
-        assert_eq!(convert_knots_to_mph(25), 28.77);
-    }
-    #[test]
-    fn test_compute_wind_chill() {
-        assert_eq!(compute_wind_chill(20.0, 5).unwrap().round(), 12.0);
-
-        assert!(compute_wind_chill(50.0, 5).is_none());
-        assert!(compute_wind_chill(49.9, 5).is_some());
-
-        assert!(compute_wind_chill(40.0, 2).is_none());
-        assert!(compute_wind_chill(40.0, 3).is_some());
-    }
 
     #[test]
     fn test_compute_relative_humidity() {
